@@ -1,0 +1,30 @@
+const media = [
+  // Imágenes
+  { type: "image", src: "Fotos/IMG_0001.JPG" },
+  { type: "image", src: "Fotos/IMG_0007.JPG" },
+  { type: "image", src: "Fotos/IMG_0017.JPG" },
+  { type: "image", src: "Fotos/IMG_0025.JPG" },
+  { type: "image", src: "Fotos/IMG_0035.JPG" },
+  { type: "image", src: "Fotos/IMG_0037.JPG" },
+  { type: "image", src: "Fotos/IMG_0038.JPG" },
+  { type: "image", src: "Fotos/IMG_0048.JPG" },
+  { type: "image", src: "Fotos/IMG_0054.JPG" },
+  { type: "image", src: "Fotos/IMG_0308.JPG" },
+  { type: "image", src: "Fotos/IMG_0320.JPG" },
+  { type: "image", src: "Fotos/IMG_0322.JPG" },
+  { type: "image", src: "Fotos/IMG_0328.JPG" },
+  { type: "image", src: "Fotos/IMG_0329.JPG" },
+  { type: "image", src: "Fotos/IMG_0351.JPG" },
+  { type: "image", src: "Fotos/IMG_0354.JPG" },
+  { type: "image", src: "Fotos/IMG_0356.JPG" },
+  { type: "image", src: "Fotos/IMG_0422.JPG" },
+
+  // Videos
+  { type: "video", src: "Videos/MVI_0012.MP4" },
+  { type: "video", src: "Videos/MVI_0015.MP4" },
+  { type: "video", src: "Videos/MVI_0016.MP4" },
+  { type: "video", src: "Videos/MVI_0192.MP4" },
+  { type: "video", src: "Videos/MVI_0358.MP4" },
+  { type: "video", src: "Videos/MVI_0421.MP4" },
+  { type: "video", src: "Videos/MVI_0424.MP4" },
+];

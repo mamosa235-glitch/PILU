@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PILU Optimitzat</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+<style>
+* { box-sizing: border-box; margin:0; padding:0; }
+body {
+  font-family:'Inter', sans-serif;
+  background: radial-gradient(circle at top,#111 0%,#070707 60%);
+  color:white; overflow-x:hidden;
+}
+body::after {
+  content:""; position:fixed; inset:0;
+  background:url('https://grainy-gradients.vercel.app/noise.svg');
+  opacity:0.03; pointer-events:none; z-index:9999;
+}
+
+header {
+  position:sticky; top:0; z-index:1000;
+  text-align:center; padding:30px 20px;
+  font-size:42px; font-weight:800; letter-spacing:12px;
+  background:rgba(15,15,15,0.6); backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  animation:fadeDown 1s ease;
+}
+@keyframes fadeDown { from {opacity:0; transform:translateY(-20px);} to {opacity:1; transform:translateY(0);} }
+
+.gallery {
+  max-width:1700px; margin:auto; padding:60px 40px;
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+  gap:20px;
+}
+.item {
+  position:relative; border-radius:24px; overflow:hidden;
+  background:#111; cursor:pointer;
+  transition:transform 0.5s cubic-bezier(.2,.8,.2,1), box-shadow 0.5s ease;
+  min-height:200px;
+}
+.item:hover { transform:translateY(-10px) scale(1.02); box-shadow:0 30px 60px rgba(0,0,0,0.7); }
+.item img, .item video {
+  width:100%; height:100%; object-fit:cover;
+  transition:transform 1s ease, opacity 0.4s ease;
+}
+.item:hover img, .item:hover video { transform:scale(1.05); }
+
+.badge {
+  position:absolute; bottom:10px; right:10px;
+  width:26px; height:26px; display:flex; align-items:center; justify-content:center;
+  border-radius:7px; background:rgba(0,0,0,0.35);
+  backdrop-filter:blur(6px); opacity:0; transition:opacity 0.25s ease; pointer-events:none;
+}
+.item:hover .badge { opacity:1; }
+.badge svg { width:14px; height:14px; stroke:white; }
+
+.lightbox {
+  position:fixed; inset:0; background:rgba(0,0,0,0.98);
+  display:none; align-items:center; justify-content:center; flex-direction:column; z-index:5000;
+  animation:fadeIn 0.4s ease;
+}
+@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+.lightbox-content {
+  max-width:95%; max-height:90%;
+  display:flex; align-items:center; justify-content:center;
+}
+.lightbox img, .lightbox video {
+  max-width:100%; max-height:90vh;
+  object-fit:contain; border-radius:20px;
+  box-shadow:0 40px 80px rgba(0,0,0,0.8);
+  animation:zoomIn 0.4s ease; cursor:pointer;
+}
+@keyframes zoomIn { from{transform:scale(0.95); opacity:0;} to{transform:scale(1); opacity:1;} }
+
+.controls {
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%); display:flex;
+  justify-content:space-between; width:80%; pointer-events:auto; z-index:1000;
+}
+.btn {
+  font-size:22px; padding:10px 14px;
+  background:rgba(255,255,255,0.06); backdrop-filter:blur(6px);
+  border-radius:10px; cursor:pointer; transition:0.2s;
+}
+.btn:hover { background:rgba(255,255,255,0.25); transform:scale(1.1); }
+.close {
+  position:absolute; top:30px; right:40px;
+  font-size:18px; padding:8px 12px;
+  background:rgba(255,255,255,0.06); backdrop-filter:blur(6px);
+  border-radius:10px; cursor:pointer; transition:0.2s;
+}
+.close:hover { background:rgba(255,255,255,0.25); transform:scale(1.1); }
+@media(max-width:768px){ header{font-size:28px; letter-spacing:6px;} .close{right:20px;} }
+</style>
+</head>
+<body>
+
+<header>PILU</header>
+<div class="gallery" id="gallery"></div>
+
+<div class="lightbox" id="lightbox">
+  <div class="close" onclick="closeLightbox()">✕</div>
+  <div class="lightbox-content" id="lightbox-content"></div>
+  <div class="controls">
+    <div class="btn" onclick="changeItem(-1)">❮</div>
+    <div class="btn" onclick="changeItem(1)">❯</div>
+  </div>
+</div>
+
+<script src="media.js"></script>
+<script>
+const gallery = document.getElementById("gallery");
+const lightbox = document.getElementById("lightbox");
+const lightboxContent = document.getElementById("lightbox-content");
+let currentIndex=0;
+
+media.forEach((item,index)=>{
+  const container = document.createElement('div');
+  container.classList.add('item');
+
+  if(item.type==='image'){
+    const img=document.createElement('img');
+    img.dataset.src=item.src;
+    img.alt='';
+    img.loading='lazy';
+    container.appendChild(img);
+  } else {
+    const video=document.createElement('video');
+    video.muted=true; video.loop=false; video.playsInline=true;
+    video.preload='metadata';
+    video.poster = item.thumb || item.src; // sempre mostra primer frame
+    container.appendChild(video);
+
+    // Lazy load del vídeo quan és a prop de la vista
+    const observer = new IntersectionObserver(entries=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          video.src = video.datasetSrc || item.src;
+          observer.unobserve(video);
+        }
+      });
+    }, {rootMargin:'200px 0px'}); // pre-carrega abans de sortir
+    video.datasetSrc = item.src;
+    observer.observe(video);
+
+    // Hover play 10s
+    container.addEventListener('mouseenter', ()=>{
+      if(video.src) { video.currentTime=0; video.play(); }
+      const limit = ()=>{ if(video.currentTime>=10){ video.pause(); video.currentTime=0; video.removeEventListener('timeupdate',limit); } };
+      video.addEventListener('timeupdate',limit);
+    });
+    container.addEventListener('mouseleave', ()=>{
+      video.pause(); video.currentTime=0;
+    });
+  }
+
+  // Badge
+  const badge=document.createElement('div'); badge.classList.add('badge');
+  badge.innerHTML=item.type==='image' ?
+    `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+       <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+       <circle cx="12" cy="12" r="3"></circle>
+     </svg>` :
+    `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+       <polygon points="8 5 19 12 8 19 8 5"></polygon>
+     </svg>`;
+  container.appendChild(badge);
+
+  container.onclick=()=>openLightbox(index);
+  gallery.appendChild(container);
+});
+
+// Lazy load imatges
+const imgs = document.querySelectorAll('.item img');
+const imgObserver = new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      const el = entry.target; el.src = el.dataset.src; imgObserver.unobserve(el);
+    }
+  });
+},{threshold:0.1});
+imgs.forEach(img=>imgObserver.observe(img));
+
+// Lightbox
+function openLightbox(i){ currentIndex=i; renderLightbox(); lightbox.style.display='flex'; }
+function closeLightbox(){ lightbox.style.display='none'; lightboxContent.innerHTML=''; if(document.fullscreenElement) document.exitFullscreen(); }
+function changeItem(dir){ currentIndex+=dir; if(currentIndex<0) currentIndex=media.length-1; if(currentIndex>=media.length) currentIndex=0; renderLightbox(); }
+function renderLightbox(){
+  lightboxContent.innerHTML='';
+  const item=media[currentIndex];
+  const el=document.createElement(item.type==='image'?'img':'video');
+  el.src=item.src;
+  if(item.type==='video'){ el.autoplay=true; el.loop=true; el.controls=false; }
+  el.addEventListener('dblclick',()=>{ if(!document.fullscreenElement) el.requestFullscreen(); else document.exitFullscreen(); });
+  lightboxContent.appendChild(el);
+}
+
+// Keyboard i click fora
+document.addEventListener('keydown', e=>{
+  if(lightbox.style.display==='flex'){
+    if(e.key==='ArrowRight') changeItem(1);
+    if(e.key==='ArrowLeft') changeItem(-1);
+    if(e.key==='Escape') closeLightbox();
+  }
+});
+lightbox.addEventListener('click', e=>{ if(e.target===lightbox) closeLightbox(); });
+</script>
+</body>
+</html>
